@@ -1,7 +1,7 @@
 from __future__ import (absolute_import, division,
                         print_function, unicode_literals)
 
-from future.moves.urllib.parse import urlencode
+from six.moves.urllib.parse import urlencode
 import requests
 
 from . import exceptions
@@ -25,14 +25,18 @@ class BasePayment(object):
         )
 
     @classmethod
-    def process_result(cls, result):
+    def _handler_errors(cls, result):
         if result.status_code == 400:
             raise exceptions.FormatError
         elif result.status_code == 401:
             raise exceptions.TokenError
         elif result.status_code == 403:
             raise exceptions.ScopeError
-        return result.json()
+
+    @classmethod
+    def process_result(cls, result):
+        cls._handler_errors(result)
+        return result.json() if result.ok else result.raise_for_status()
 
 
 class Wallet(BasePayment):
@@ -53,15 +57,15 @@ class Wallet(BasePayment):
 
     def operation_history(self, options):
         return self._send_authenticated_request("/api/operation-history",
-            options)
+                                                options)
 
     def request_payment(self, options):
         return self._send_authenticated_request("/api/request-payment",
-            options)
+                                                options)
 
     def process_payment(self, options):
         return self._send_authenticated_request("/api/process-payment",
-            options)
+                                                options)
 
     def incoming_transfer_accept(self, operation_id, protection_code=None):
         return self._send_authenticated_request(
@@ -117,5 +121,3 @@ class ExternalPayment(BasePayment):
     def process(self, options):
         options['instance_id'] = self.instance_id
         return self.send_request("/api/process-external-payment", body=options)
-
-
