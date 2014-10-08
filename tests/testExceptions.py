@@ -1,9 +1,9 @@
 from __future__ import (absolute_import, division,
                         print_function, unicode_literals)
-from future.builtins import *
 import unittest
 from yandex_money import exceptions
 from yandex_money.api import Wallet
+
 
 class ExceptionsTestSuite(unittest.TestCase):
     def setUp(self):

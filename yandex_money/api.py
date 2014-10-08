@@ -1,11 +1,11 @@
 from __future__ import (absolute_import, division,
                         print_function, unicode_literals)
-from future.builtins import *
 
-from future.moves.urllib.parse import urlparse, urlencode
+from future.moves.urllib.parse import urlencode
 import requests
 
 from . import exceptions
+
 
 class BasePayment(object):
     MONEY_URL = "https://money.yandex.ru"
@@ -34,14 +34,14 @@ class BasePayment(object):
             raise exceptions.ScopeError
         return result.json()
 
+
 class Wallet(BasePayment):
     def __init__(self, access_token):
         self.access_token = access_token
 
     def _send_authenticated_request(self, url, options=None):
-        return self.send_request(url, {
-            "Authorization": "Bearer {}".format(self.access_token) 
-            }, options)
+        return self.send_request(
+            url, {"Authorization": "Bearer {}".format(self.access_token)}, options)
 
     def account_info(self):
         return self._send_authenticated_request("/api/account-info")
@@ -72,35 +72,30 @@ class Wallet(BasePayment):
 
     def incoming_transfer_reject(self, operation_id):
         return self._send_authenticated_request("/api/incoming-transfer-reject",
-            {
-                "operation_id": operation_id
-        })
+                                                {"operation_id": operation_id})
 
     @classmethod
-    def build_obtain_token_url(self, client_id, redirect_uri, scope):
-        return "{}/oauth/authorize?{}".format(self.SP_MONEY_URL,
-                urlencode({
-                    "client_id": client_id,
-                    "redirect_uri": redirect_uri,
-                    "scope": " ".join(scope)
-    }))
+    def build_obtain_token_url(cls, client_id, redirect_uri, scope):
+        params = urlencode({"client_id": client_id,
+                            "redirect_uri": redirect_uri,
+                            "scope": " ".join(scope)})
+        return "{}/oauth/authorize?{}".format(cls.SP_MONEY_URL, params)
 
     @classmethod
-    def get_access_token(self, client_id, code, redirect_uri,
-            client_secret=None):
-        full_url = self.SP_MONEY_URL + "/oauth/token"
-        return self.process_result(requests.post(full_url, data={
+    def get_access_token(cls, client_id, code, redirect_uri,
+                         client_secret=None):
+        full_url = cls.SP_MONEY_URL + "/oauth/token"
+        return cls.process_result(requests.post(full_url, data={
             "code": code,
             "client_id": client_id,
             "grant_type": "authorization_code",
             "redirect_uri": redirect_uri,
             "client_secret": client_secret
-            }
-        ))
+        }))
 
     @classmethod
-    def revoke_token(self, token, revoke_all=False):
-        return self.send_request("/api/revoke", body={
+    def revoke_token(cls, token, revoke_all=False):
+        return cls.send_request("/api/revoke", body={
             "revoke-all": revoke_all
         }, headers={"Authorization": "Bearer {}".format(token)})
 

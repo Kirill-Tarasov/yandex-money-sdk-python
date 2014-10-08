@@ -1,13 +1,9 @@
 from __future__ import (absolute_import, division,
                         print_function, unicode_literals)
-from future.builtins import *
-from future.moves.urllib.parse import urlencode
 
 import unittest
-import json
 
 from yandex_money.api import Wallet
-from yandex_money import exceptions
 from .constants import CLIENT_ID, ACCESS_TOKEN
 
 
@@ -47,7 +43,7 @@ class WalletTestSuite(unittest.TestCase):
             "label": "testPayment",
             "test_payment": True,
             "test_result": "success"
-        };
+        }
 
         response = self.api.request_payment(options)
         self.assertEqual(response['status'], 'success')
@@ -65,7 +61,7 @@ class WalletTestSuite(unittest.TestCase):
     def testIncomingTransferAccept(self):
         #self.addResponse("incoming-transfer-accept", {"status": "success"})
         operation_id = "some id"
-        protection_code = "some code" # TODO: test when it's None
+        protection_code = "some code"  # TODO: test when it's None
 
         response = self.api.incoming_transfer_accept(
             operation_id=operation_id,
@@ -96,7 +92,7 @@ class WalletTestSuite(unittest.TestCase):
             "grant_type": "authorization_code",
             "redirect_uri": "redirect_uri",
             "client_secret": "client_secret" 
-            }
+        }
         response = Wallet.get_access_token(
             code=options["code"],
             client_id=options["client_id"],

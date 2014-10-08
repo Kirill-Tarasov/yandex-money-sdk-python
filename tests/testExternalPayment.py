@@ -1,12 +1,9 @@
 from __future__ import (absolute_import, division,
                         print_function, unicode_literals)
-from future.builtins import *
-from future.moves.urllib.parse import urlencode
 
 import unittest
 
 from yandex_money.api import ExternalPayment
-from yandex_money import exceptions
 
 from .constants import CLIENT_ID, ACCESS_TOKEN
 
@@ -45,7 +42,7 @@ class ExternalTestSuite(unittest.TestCase):
 
         options = {
             "request_id": response['request_id'],
-            "ext_auth_success_uri": "http://lcoalhost:8000",
+            "ext_auth_success_uri": "http://localhost:8000",
             "ext_auth_fail_uri": "http://localhost:8000"
         }
 
