@@ -1,6 +1,8 @@
 from __future__ import (absolute_import, division,
                         print_function, unicode_literals)
 
+from copy import copy
+
 from six.moves.urllib.parse import urlencode
 import requests
 
@@ -105,19 +107,37 @@ class Wallet(BasePayment):
 
 
 class ExternalPayment(BasePayment):
-    def __init__(self, instance_id):
-        self.instance_id = instance_id
+    __cache = {}  # cross instances cache
 
-    @classmethod
-    def get_instance_id(cls, client_id):
-        return cls.send_request("/api/instance-id", body={
-            "client_id": client_id
-        })
+    def __init__(self, client_id):
+        self.client_id = client_id
+
+    @property
+    def _instance_id(self):
+        if 'instance_id' not in self.__cache:
+            resp = self.send_request("/api/instance-id", body={
+                "client_id": self.client_id
+            })
+            self.__cache['instance_id'] = resp['instance_id'] if resp['status'] == 'success' else None
+        return self.__cache['instance_id']
 
     def request(self, options):
-        options['instance_id'] = self.instance_id
+        options = copy(options)
+        options['instance_id'] = self._instance_id
         return self.send_request("/api/request-external-payment", body=options)
 
     def process(self, options):
-        options['instance_id'] = self.instance_id
+        options = copy(options)
+        options['instance_id'] = self._instance_id
         return self.send_request("/api/process-external-payment", body=options)
+
+    @classmethod
+    def zero_cache(cls):
+        cls.__cache = {}
+
+    @classmethod
+    def _handler_errors(cls, result):
+        super(ExternalPayment, cls)._handler_errors(result)
+        result = result.json()
+        if result['status'] == 'refused':
+            raise exceptions.YandexPaymentError(result['error'])
