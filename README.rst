@@ -39,8 +39,7 @@ Using Yandex.Money API requires following steps
    .. code:: python
 
        scope = ['account-info', 'operation-history'] # etc..
-       auth_url = WalletPayment.buildObtainTokenUrl(client_id,
-           redirect_uri, scope, client_secret)
+       auth_url = WalletPayment.build_obtain_token_url(client_id, redirect_uri, scope)
 
 2. After that, user fills Yandex.Money HTML form and user is redirected
    back to ``REDIRECT_URI?code=CODE``.
@@ -55,7 +54,7 @@ Using Yandex.Money API requires following steps
 4. Now you can use Yandex.Money API.
 
    .. code:: python
-
+       api = WalletPayment(access_token)
        account_info = api.account_info()
        balance = account_info['balance'] # and so on
 
@@ -68,7 +67,7 @@ Using Yandex.Money API requires following steps
            "label": "testPayment",
            "test_payment": true,
            "test_result": "success"
-       };
+       }
        request_result = api.request(request_options)
        # check status
 
@@ -126,7 +125,7 @@ Running tests
 -------------
 
 1. Clone this repo.
-2. Create ``tests/constants.python`` file with ``ACCESS_TOKEN`` and
+2. Create ``tests/constants.py`` file with ``ACCESS_TOKEN`` and
    ``CLIENT_ID`` constants.
 3. Install ``tox``
 4. Run ``tox`` in repo root directory
