@@ -54,6 +54,7 @@ Using Yandex.Money API requires following steps
 4. Now you can use Yandex.Money API.
 
    .. code:: python
+
        api = WalletPayment(access_token)
        account_info = api.account_info()
        balance = account_info['balance'] # and so on
