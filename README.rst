@@ -84,23 +84,27 @@ Using Yandex.Money API requires following steps
 Payments from bank cards without authorization
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-1. Fetch instantce-id(ussually only once for every client. You can store
-   result in DB).
+1. Create ExternalPayment instance
 
    .. code:: python
 
-       response = ExternalPayment.get_instance_id(client_id)
-       if reponse.status == "success":
-           instance_id = response.instance_id;
-       else:
-           # throw exception with reponse->error message
+       external_payment = ExternalPayment(client_id)
+
+   1.1 We are recommend you to store 'instance_id' in safe storage (usually it is only once for every client).
+
+        .. code:: python
+
+            if Db.exist('instance_id'):
+                external_payment = ExternalPayment(instance_id=Db.get('instance_id'))
+            else:
+                external_payment = ExternalPayment(client_id)
+                Db.store(instance_id=external_payment.instance_id)
+
 
 2. Make request payment
 
    .. code:: python
 
-       # make instance
-       external_payment = ExternalPayment(instance_id);
 
        payment_options = {
            # pattern_id, etc..
