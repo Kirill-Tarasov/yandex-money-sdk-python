@@ -111,6 +111,14 @@ class Wallet(BasePayment):
 
 class ExternalPayment(BasePayment):
     __cache = {}  # cross instances cache
+    _SUCCESS = '1'
+    _ERROR = '0'
+    _PROGRESS = '-1'
+    STATUSES = {
+        'success': _SUCCESS,
+        'refused': _ERROR,
+        'in_progress': _PROGRESS,
+    }
 
     def __init__(self, client_id=None, instance_id=None):
         if (client_id or instance_id) is None:
@@ -140,7 +148,8 @@ class ExternalPayment(BasePayment):
         options['instance_id'] = self.instance_id
         return self.send_request("/api/process-external-payment", body=options)
 
-
+    def get_status(self, options):
+        return self.STATUSES.get(self.process(options), self._ERROR)
 
     @classmethod
     def zero_cache(cls):

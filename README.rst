@@ -94,11 +94,7 @@ Payments from bank cards without authorization
 
         .. code:: python
 
-            if Db.exist('instance_id'):
-                external_payment = ExternalPayment(instance_id=Db.get('instance_id'))
-            else:
-                external_payment = ExternalPayment(client_id)
-                Db.store(instance_id=external_payment.instance_id)
+            external_payment = ExternalPayment(client_id, instance_id=Db.get('instance_id'))
 
 
 2. Make request payment
