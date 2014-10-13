@@ -9,6 +9,9 @@ import requests
 from . import exceptions
 
 
+__all__ = ['Wallet', 'ExternalPayment']
+
+
 class BasePayment(object):
     MONEY_URL = "https://money.yandex.ru"
     SP_MONEY_URL = "https://sp-money.yandex.ru"
@@ -17,7 +20,7 @@ class BasePayment(object):
     def send_request(cls, url, headers=None, body=None):
         if not headers:
             headers = {}
-        headers['User-Agent'] = "Yandex.Money.SDK/Python";
+        headers['User-Agent'] = "Yandex.Money.SDK/Python"
 
         if not body:
             body = {}
@@ -38,7 +41,7 @@ class BasePayment(object):
     @classmethod
     def process_result(cls, result):
         cls._handler_errors(result)
-        return result.json() if result.ok else result.raise_for_status()
+        return _AttribDict(result.json()) if result.ok else result.raise_for_status()
 
 
 class Wallet(BasePayment):
@@ -109,11 +112,17 @@ class Wallet(BasePayment):
 class ExternalPayment(BasePayment):
     __cache = {}  # cross instances cache
 
-    def __init__(self, client_id):
-        self.client_id = client_id
+    def __init__(self, client_id=None, instance_id=None):
+        if (client_id or instance_id) is None:
+            raise TypeError('instance required instance_id or client_id argument')
+        self.client_id, self.__instance_id = client_id, instance_id
 
     @property
-    def _instance_id(self):
+    def instance_id(self):
+        if self.__instance_id is not None:
+            if callable(self.__instance_id):
+                self.__instance_id = self.__instance_id()
+            return self.__instance_id
         if 'instance_id' not in self.__cache:
             resp = self.send_request("/api/instance-id", body={
                 "client_id": self.client_id
@@ -123,13 +132,15 @@ class ExternalPayment(BasePayment):
 
     def request(self, options):
         options = copy(options)
-        options['instance_id'] = self._instance_id
+        options['instance_id'] = self.instance_id
         return self.send_request("/api/request-external-payment", body=options)
 
     def process(self, options):
         options = copy(options)
-        options['instance_id'] = self._instance_id
+        options['instance_id'] = self.instance_id
         return self.send_request("/api/process-external-payment", body=options)
+
+
 
     @classmethod
     def zero_cache(cls):
@@ -141,3 +152,14 @@ class ExternalPayment(BasePayment):
         result = result.json()
         if result['status'] == 'refused':
             raise exceptions.YandexPaymentError(result['error'])
+
+
+class _AttribDict(dict):
+    def __getattribute__(self, name):
+        if name in ['status', 'error', 'acs_uri', 'acs_params', 'money_source',
+                    'next_retry', 'invoice_id', 'instance_id', 'request_id',
+                    'contract_amount', 'title', 'balance', 'account', 'currency',
+                    'account_status', 'account_type', 'avatar', 'services_additional',
+                    'cards_linked', 'balance_details', 'operations', 'next_record']:
+            return super(_AttribDict, self).__getitem__(name)
+        return super(_AttribDict, self).__getattribute__(name)
